@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Budget</title>
+<style>
+  :root{color-scheme:dark}
+  html,body{margin:0;padding:0;background:#0f0f10;color:#f4f4f5;
+    font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}
+  .wrap{max-width:640px;margin:0 auto;padding:16px}
+  h1{font-size:17px;margin:0 0 2px}
+  .date{color:#9aa0aa;font-size:12px;margin-bottom:14px}
+  .tot{background:#1b1b1d;border-radius:14px;padding:14px 16px;margin-bottom:16px}
+  .tot .lbl{color:#9aa0aa;font-size:12px}
+  .tot .big{font-size:28px;font-weight:700;margin:2px 0}
+  .card{background:#1b1b1d;border-radius:14px;padding:12px 14px;margin-bottom:10px}
+  .row{display:flex;justify-content:space-between;align-items:baseline}
+  .cat{font-weight:600;font-size:14px}
+  .res{font-weight:700;font-size:16px}
+  .bar{height:6px;background:#2c2c30;border-radius:99px;margin:8px 0 6px;overflow:hidden}
+  .fill{height:100%;border-radius:99px;transition:width .4s ease}
+  .sub{color:#9aa0aa;font-size:12px}
+  .msg{padding:40px 16px;text-align:center;color:#9aa0aa}
+  .retry{display:inline-block;margin-top:14px;padding:10px 18px;background:#2a2a2e;
+    border-radius:10px;color:#f4f4f5;text-decoration:none;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="msg">Carico il budget…</div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIH2RdjvjFb3VmqpBc8K09E-84lxPHBGF7v-VeV22kSWV4HHJVfFCIb5ohiWwTcuZw/exec?view=json&token=bdg_7Qx2K9mLpV4tR8nZ3wYcF6hJ";
+// proxy "incognito": fa la richiesta senza i tuoi cookie Google
+const PROXY = "https://api.allorigins.win/raw?url=";
+
+function eur(n){ return "€" + Math.round(n).toLocaleString("it-IT"); }
+
+function colorFor(res, bud){
+  if(res < 0) return "#e5484d";
+  if(bud > 0 && res/bud < 0.2) return "#f0a818";
+  return "#2a9d5c";
+}
+
+function render(data){
+  const voci = (data.voci || []).filter(x => (x.categoria||"").toUpperCase() !== "TOTALE");
+  let totRes = 0, totBud = 0, cards = "";
+  voci.forEach(x => {
+    totRes += x.residuo; totBud += x.budget;
+    const pct = x.budget > 0 ? Math.min(100, Math.max(0, (x.speso/x.budget)*100)) : 0;
+    const col = colorFor(x.residuo, x.budget);
+    cards +=
+      '<div class="card">' +
+        '<div class="row"><span class="cat">' + esc(x.categoria) + '</span>' +
+        '<span class="res" style="color:'+col+'">' + eur(x.residuo) + '</span></div>' +
+        '<div class="bar"><div class="fill" style="width:'+pct+'%;background:'+col+'"></div></div>' +
+        '<div class="sub">speso ' + eur(x.speso) + ' di ' + eur(x.budget) + '</div>' +
+      '</div>';
+  });
+  document.getElementById("app").innerHTML =
+    '<h1>Budget residuo</h1>' +
+    '<div class="date">aggiornato ' + esc(data.aggiornato || "") + '</div>' +
+    '<div class="tot"><div class="lbl">totale residuo del mese</div>' +
+    '<div class="big">' + eur(totRes) + '</div>' +
+    '<div class="lbl">su ' + eur(totBud) + ' di budget</div></div>' +
+    cards;
+}
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function fail(){
+  document.getElementById("app").innerHTML =
+    '<div class="msg">Non sono riuscito a caricare i dati.<br>' +
+    '<a class="retry" href="javascript:location.reload()">Riprova</a></div>';
+}
+
+fetch(PROXY + encodeURIComponent(SCRIPT_URL))
+  .then(r => r.text())
+  .then(t => { render(JSON.parse(t)); })
+  .catch(fail);
+</script>
+</body>
+</html>
