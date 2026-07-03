@@ -32,9 +32,7 @@
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIH2RdjvjFb3VmqpBc8K09E-84lxPHBGF7v-VeV22kSWV4HHJVfFCIb5ohiWwTcuZw/exec?view=json&token=bdg_7Qx2K9mLpV4tR8nZ3wYcF6hJ";
-// proxy "incognito": fa la richiesta senza i tuoi cookie Google
-const PROXY = "https://api.allorigins.win/raw?url=";
+const WORKER_URL = "https://budget-proxy.lorenzohoffmann-budget.workers.dev";
 
 function eur(n){ return "€" + Math.round(n).toLocaleString("it-IT"); }
 
@@ -76,7 +74,7 @@ function fail(){
     '<a class="retry" href="javascript:location.reload()">Riprova</a></div>';
 }
 
-fetch(PROXY + encodeURIComponent(SCRIPT_URL))
+fetch(WORKER_URL)
   .then(r => r.text())
   .then(t => { render(JSON.parse(t)); })
   .catch(fail);
