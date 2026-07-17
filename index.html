@@ -1,83 +1,327 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Budget</title>
 <style>
   :root{color-scheme:dark}
-  html,body{margin:0;padding:0;background:#0f0f10;color:#f4f4f5;
-    font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}
-  .wrap{max-width:640px;margin:0 auto;padding:16px}
-  h1{font-size:17px;margin:0 0 2px}
-  .date{color:#9aa0aa;font-size:12px;margin-bottom:14px}
-  .tot{background:#1b1b1d;border-radius:14px;padding:14px 16px;margin-bottom:16px}
-  .tot .lbl{color:#9aa0aa;font-size:12px}
-  .tot .big{font-size:28px;font-weight:700;margin:2px 0}
-  .card{background:#1b1b1d;border-radius:14px;padding:12px 14px;margin-bottom:10px}
-  .row{display:flex;justify-content:space-between;align-items:baseline}
-  .cat{font-weight:600;font-size:14px}
-  .res{font-weight:700;font-size:16px}
-  .bar{height:6px;background:#2c2c30;border-radius:99px;margin:8px 0 6px;overflow:hidden}
-  .fill{height:100%;border-radius:99px;transition:width .4s ease}
-  .sub{color:#9aa0aa;font-size:12px}
-  .msg{padding:40px 16px;text-align:center;color:#9aa0aa}
-  .retry{display:inline-block;margin-top:14px;padding:10px 18px;background:#2a2a2e;
-    border-radius:10px;color:#f4f4f5;text-decoration:none;font-size:14px}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#000;color:#fff;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  body{padding-bottom:110px}
+  .page{max-width:520px;margin:0 auto;padding:20px 16px 8px}
+  .view{display:none}
+  .view.active{display:block}
+
+  h1.title{font-size:32px;font-weight:800;margin:8px 0 20px;letter-spacing:-0.5px}
+
+  .card{background:#1a1a1c;border-radius:24px;padding:20px;margin-bottom:12px}
+  .card .lbl{color:#9a9a9e;font-size:14px;margin-bottom:2px}
+  .card .big{font-size:34px;font-weight:800;letter-spacing:-0.5px}
+
+  .cat-card{background:#1a1a1c;border-radius:20px;padding:14px 16px;margin-bottom:10px}
+  .cat-row{display:flex;justify-content:space-between;align-items:baseline}
+  .cat-name{font-weight:600;font-size:15px}
+  .cat-res{font-weight:700;font-size:17px}
+  .cat-bar{height:7px;background:#2c2c2e;border-radius:99px;margin:10px 0 6px;overflow:hidden}
+  .cat-fill{height:100%;border-radius:99px;transition:width .4s ease}
+  .cat-sub{color:#9a9a9e;font-size:13px}
+
+  .period-bar{display:flex;background:#1a1a1c;border-radius:99px;padding:4px;margin-bottom:20px;
+    overflow-x:auto;gap:4px;}
+  .period-btn{flex:1;text-align:center;padding:8px 10px;border-radius:99px;font-size:13px;font-weight:600;
+    color:#9a9a9e;white-space:nowrap;cursor:pointer;user-select:none;}
+  .period-btn.active{background:#2c2c2e;color:#fff}
+
+  .donut-wrap{position:relative;display:flex;flex-direction:column;align-items:center;padding:12px 0 4px;
+    touch-action:pan-y;}
+  .donut-total{position:absolute;top:96px;left:50%;transform:translate(-50%,-50%);text-align:center;
+    pointer-events:none;}
+  .donut-total .amt{font-size:26px;font-weight:800}
+  .donut-total .lbl{font-size:12px;color:#9a9a9e;margin-top:2px}
+  .donut-hint{margin-top:10px;color:#68686c;font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer}
+  .chev{transition:transform .3s ease}
+  .chev.open{transform:rotate(180deg)}
+
+  .legend{max-height:0;overflow:hidden;transition:max-height .35s ease, opacity .3s ease;opacity:0}
+  .legend.open{max-height:600px;opacity:1;margin-top:12px}
+  .legend-row{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;
+    border-bottom:1px solid #1c1c1e}
+  .legend-row:last-child{border-bottom:none}
+  .legend-left{display:flex;align-items:center;gap:10px}
+  .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .legend-name{font-size:14px;font-weight:500}
+  .legend-right{text-align:right}
+  .legend-amt{font-size:14px;font-weight:700}
+  .legend-pct{font-size:12px;color:#9a9a9e}
+
+  .rank-card{background:#1a1a1c;border-radius:20px;padding:16px 18px;margin-bottom:12px}
+  .rank-card .rank-title{color:#9a9a9e;font-size:13px;margin-bottom:10px;text-transform:uppercase;
+    letter-spacing:0.4px;font-weight:600}
+  .rank-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0}
+  .rank-left{display:flex;align-items:center;gap:10px}
+  .medal{font-size:18px}
+  .rank-name{font-size:15px;font-weight:600}
+  .rank-amt{font-size:15px;font-weight:700}
+  .rank-single .rank-amt{font-size:28px;font-weight:800}
+  .rank-single .rank-name{font-size:15px;color:#9a9a9e;font-weight:500}
+
+  .navbar{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));
+    background:rgba(28,28,30,0.92);backdrop-filter:blur(20px);border-radius:99px;display:flex;
+    padding:8px;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:520px;margin:0 auto;}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;
+    border-radius:99px;color:#8e8e93;cursor:pointer;transition:background .2s ease,color .2s ease;}
+  .nav-item.active{background:#2c2c2e;color:#fff}
+  .nav-item svg{width:22px;height:22px}
+  .nav-item .nav-label{font-size:11px;font-weight:600}
+
+  .msg{padding:60px 16px;text-align:center;color:#9a9a9e}
+  .retry{display:inline-block;margin-top:14px;padding:10px 18px;background:#1a1a1c;
+    border-radius:10px;color:#fff;text-decoration:none;font-size:14px}
 </style>
 </head>
 <body>
-<div class="wrap" id="app">
-  <div class="msg">Carico il budget…</div>
+
+<div class="page">
+  <div id="view-dashboard" class="view active">
+    <h1 class="title">Budget residuo</h1>
+    <div id="dash-summary" class="card"></div>
+    <div id="dash-list"></div>
+  </div>
+
+  <div id="view-categorie" class="view">
+    <h1 class="title">Categorie</h1>
+    <div class="period-bar" id="period-bar">
+      <div class="period-btn" data-period="day">Oggi</div>
+      <div class="period-btn" data-period="week">Sett.</div>
+      <div class="period-btn active" data-period="month">Mese</div>
+      <div class="period-btn" data-period="year">Anno</div>
+      <div class="period-btn" data-period="alltime">Tutto</div>
+    </div>
+    <div class="card">
+      <div class="donut-wrap" id="donut-wrap">
+        <svg id="donut-svg" viewBox="0 0 200 200" width="220" height="220"></svg>
+        <div class="donut-total"><div class="amt" id="donut-total-amt">€0</div><div class="lbl">totale</div></div>
+      </div>
+      <div class="donut-hint" id="donut-hint"><span>Scorri per la legenda</span><svg class="chev" id="chev" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+
+  <div id="view-classifiche" class="view">
+    <h1 class="title">Classifiche</h1>
+    <div id="rank-content"></div>
+  </div>
+</div>
+
+<div class="navbar">
+  <div class="nav-item active" data-view="dashboard">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M12 20V4M20 20v-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="nav-label">Budget</div>
+  </div>
+  <div class="nav-item" data-view="categorie">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-9-9v9h9Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M21 12A9 9 0 0 0 12 3v9h9Z" fill="currentColor" opacity="0.35"/></svg>
+    <div class="nav-label">Categorie</div>
+  </div>
+  <div class="nav-item" data-view="classifiche">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M7 6H4a1 1 0 0 0-1 1c0 2.5 1.8 4.5 4 4.9M17 6h3a1 1 0 0 1 1 1c0 2.5-1.8 4.5-4 4.9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <div class="nav-label">Classifiche</div>
+  </div>
 </div>
 
 <script>
 const WORKER_URL = "https://budget-proxy.lorenzohoffmann-budget.workers.dev";
 
+const CAT_COLORS = ["#3987e5","#199e70","#c98500","#008300","#9085e9","#e66767","#d55181","#d95926"];
+const OTHER_COLOR = "#5a5a5e";
+
 function eur(n){ return "€" + Math.round(n).toLocaleString("it-IT"); }
-
-function colorFor(res, bud){
-  if(res < 0) return "#e5484d";
-  if(bud > 0 && res/bud < 0.2) return "#f0a818";
-  return "#2a9d5c";
-}
-
-function render(data){
-  const voci = (data.voci || []).filter(x => (x.categoria||"").toUpperCase() !== "TOTALE");
-  let totRes = 0, totBud = 0, cards = "";
-  voci.forEach(x => {
-    totRes += x.residuo; totBud += x.budget;
-    const pct = x.budget > 0 ? Math.min(100, Math.max(0, (x.speso/x.budget)*100)) : 0;
-    const col = colorFor(x.residuo, x.budget);
-    cards +=
-      '<div class="card">' +
-        '<div class="row"><span class="cat">' + esc(x.categoria) + '</span>' +
-        '<span class="res" style="color:'+col+'">' + eur(x.residuo) + '</span></div>' +
-        '<div class="bar"><div class="fill" style="width:'+pct+'%;background:'+col+'"></div></div>' +
-        '<div class="sub">speso ' + eur(x.speso) + ' di ' + eur(x.budget) + '</div>' +
-      '</div>';
-  });
-  document.getElementById("app").innerHTML =
-    '<h1>Budget residuo</h1>' +
-    '<div class="date">aggiornato ' + esc(data.aggiornato || "") + '</div>' +
-    '<div class="tot"><div class="lbl">totale residuo del mese</div>' +
-    '<div class="big">' + eur(totRes) + '</div>' +
-    '<div class="lbl">su ' + eur(totBud) + ' di budget</div></div>' +
-    cards;
-}
-
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-function fail(){
-  document.getElementById("app").innerHTML =
-    '<div class="msg">Non sono riuscito a caricare i dati.<br>' +
-    '<a class="retry" href="javascript:location.reload()">Riprova</a></div>';
+document.querySelectorAll(".nav-item").forEach(function(item){
+  item.addEventListener("click", function(){
+    document.querySelectorAll(".nav-item").forEach(function(n){ n.classList.remove("active"); });
+    document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+    item.classList.add("active");
+    document.getElementById("view-" + item.dataset.view).classList.add("active");
+  });
+});
+
+function renderDashboard(data){
+  const voci = (data.voci || []).filter(function(x){ return (x.categoria||"").toUpperCase() !== "TOTALE"; });
+  const totRow = (data.voci || []).find(function(x){ return (x.categoria||"").toUpperCase() === "TOTALE"; });
+  const totRes = totRow ? totRow.residuo : 0;
+  const totBud = totRow ? totRow.budget : 0;
+
+  document.getElementById("dash-summary").innerHTML =
+    '<div class="lbl">totale residuo del mese</div>' +
+    '<div class="big">' + eur(totRes) + '</div>' +
+    '<div class="lbl">su ' + eur(totBud) + ' di budget</div>';
+
+  let html = "";
+  voci.forEach(function(x){
+    const pct = x.budget > 0 ? Math.min(100, Math.max(0, (x.speso/x.budget)*100)) : 0;
+    const col = x.residuo < 0 ? "#e66767" : (x.budget > 0 && x.residuo/x.budget < 0.2 ? "#eda100" : "#2ecc71");
+    html += '<div class="cat-card">' +
+      '<div class="cat-row"><span class="cat-name">' + esc(x.categoria) + '</span>' +
+      '<span class="cat-res" style="color:' + col + '">' + eur(x.residuo) + '</span></div>' +
+      '<div class="cat-bar"><div class="cat-fill" style="width:' + pct + '%;background:' + col + '"></div></div>' +
+      '<div class="cat-sub">speso ' + eur(x.speso) + ' di ' + eur(x.budget) + '</div>' +
+      '</div>';
+  });
+  document.getElementById("dash-list").innerHTML = html;
 }
 
-fetch(WORKER_URL)
-  .then(r => r.text())
-  .then(t => { render(JSON.parse(t)); })
-  .catch(fail);
+fetch(WORKER_URL + "?view=json")
+  .then(function(r){ return r.text(); })
+  .then(function(t){ renderDashboard(JSON.parse(t)); })
+  .catch(function(){ document.getElementById("dash-list").innerHTML =
+    '<div class="msg">Non sono riuscito a caricare i dati.<br><a class="retry" href="javascript:location.reload()">Riprova</a></div>'; });
+
+let currentPeriod = "month";
+
+function polarToCartesian(cx, cy, r, angleDeg){
+  const a = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+}
+function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle){
+  const p0 = polarToCartesian(cx, cy, rOuter, endAngle);
+  const p1 = polarToCartesian(cx, cy, rOuter, startAngle);
+  const p2 = polarToCartesian(cx, cy, rInner, startAngle);
+  const p3 = polarToCartesian(cx, cy, rInner, endAngle);
+  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+  return "M" + p0.x + " " + p0.y +
+    " A" + rOuter + " " + rOuter + " 0 " + largeArc + " 0 " + p1.x + " " + p1.y +
+    " L" + p2.x + " " + p2.y +
+    " A" + rInner + " " + rInner + " 0 " + largeArc + " 1 " + p3.x + " " + p3.y + " Z";
+}
+
+function renderDonut(data){
+  const voci = data.voci || [];
+  const top = voci.slice(0, 7);
+  const restTotal = voci.slice(7).reduce(function(s,v){ return s + v.speso; }, 0);
+  const items = top.map(function(v, i){ return { categoria: v.categoria, speso: v.speso, color: CAT_COLORS[i] }; });
+  if (restTotal > 0) items.push({ categoria: "Altro", speso: restTotal, color: OTHER_COLOR });
+
+  const total = data.totale || items.reduce(function(s,v){ return s + v.speso; }, 0);
+  document.getElementById("donut-total-amt").textContent = eur(total);
+
+  const svg = document.getElementById("donut-svg");
+  let paths = "";
+  let angle = 0;
+  const gap = total > 0 && items.length > 1 ? 2.5 : 0;
+  items.forEach(function(it){
+    const frac = total > 0 ? it.speso / total : 0;
+    const sweep = frac * 360;
+    if (sweep <= 0) return;
+    const start = angle + gap/2;
+    const end = angle + sweep - gap/2;
+    if (end > start) paths += '<path d="' + arcPath(100,100,92,62,start,end) + '" fill="' + it.color + '"></path>';
+    angle += sweep;
+  });
+  svg.innerHTML = paths || '<circle cx="100" cy="100" r="92" fill="#232326"></circle><circle cx="100" cy="100" r="62" fill="#000"></circle>';
+
+  let legendHtml = "";
+  items.forEach(function(it){
+    const pct = total > 0 ? Math.round((it.speso/total)*100) : 0;
+    legendHtml += '<div class="legend-row"><div class="legend-left">' +
+      '<span class="legend-dot" style="background:' + it.color + '"></span>' +
+      '<span class="legend-name">' + esc(it.categoria) + '</span></div>' +
+      '<div class="legend-right"><div class="legend-amt">' + eur(it.speso) + '</div>' +
+      '<div class="legend-pct">' + pct + '%</div></div></div>';
+  });
+  document.getElementById("legend").innerHTML = legendHtml || '<div class="msg" style="padding:20px 0">Nessuna spesa nel periodo</div>';
+}
+
+function loadCategorie(period){
+  currentPeriod = period;
+  fetch(WORKER_URL + "?view=bycategory&period=" + period)
+    .then(function(r){ return r.text(); })
+    .then(function(t){ renderDonut(JSON.parse(t)); })
+    .catch(function(){
+      document.getElementById("donut-svg").innerHTML = '<circle cx="100" cy="100" r="92" fill="#1c1c1e"></circle>';
+      document.getElementById("donut-total-amt").textContent = "—";
+      document.getElementById("legend").innerHTML =
+        '<div class="msg" style="padding:20px 0">Non sono riuscito a caricare i dati.<br>' +
+        '<a class="retry" href="javascript:location.reload()">Riprova</a></div>';
+    });
+}
+
+document.querySelectorAll(".period-btn").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    document.querySelectorAll(".period-btn").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+    loadCategorie(btn.dataset.period);
+  });
+});
+loadCategorie("month");
+
+(function(){
+  const wrap = document.getElementById("donut-wrap");
+  const legend = document.getElementById("legend");
+  const hint = document.getElementById("donut-hint");
+  const chev = document.getElementById("chev");
+  let startY = null;
+
+  function toggle(open){
+    legend.classList.toggle("open", open);
+    chev.classList.toggle("open", open);
+  }
+  function isOpen(){ return legend.classList.contains("open"); }
+
+  hint.addEventListener("click", function(){ toggle(!isOpen()); });
+
+  wrap.addEventListener("touchstart", function(e){ startY = e.touches[0].clientY; }, { passive: true });
+  wrap.addEventListener("touchmove", function(e){
+    if (startY === null) return;
+    const dy = startY - e.touches[0].clientY;
+    if (dy > 30) { toggle(true); startY = null; }
+    else if (dy < -30) { toggle(false); startY = null; }
+  }, { passive: true });
+  wrap.addEventListener("touchend", function(){ startY = null; });
+
+  wrap.addEventListener("wheel", function(e){
+    if (e.deltaY > 15) toggle(true);
+    else if (e.deltaY < -15) toggle(false);
+  }, { passive: true });
+})();
+
+fetch(WORKER_URL + "?view=ranking")
+  .then(function(r){ return r.text(); })
+  .then(function(t){
+    const d = JSON.parse(t);
+    let html = "";
+
+    html += '<div class="rank-card"><div class="rank-title">Top 3 mesi ' + new Date().getFullYear() + '</div>';
+    (d.topMesiAnno || []).forEach(function(m, i){
+      const medal = ["🥇","🥈","🥉"][i] || "";
+      html += '<div class="rank-row"><div class="rank-left"><span class="medal">' + medal + '</span>' +
+        '<span class="rank-name">' + esc(m.label) + '</span></div>' +
+        '<span class="rank-amt">' + eur(m.totale) + '</span></div>';
+    });
+    if (!d.topMesiAnno || !d.topMesiAnno.length) html += '<div class="msg" style="padding:10px 0">Nessun dato</div>';
+    html += '</div>';
+
+    function singleCard(title, entry){
+      return '<div class="rank-card rank-single"><div class="rank-title">' + title + '</div>' +
+        (entry ?
+          '<div class="rank-amt">' + eur(entry.totale) + '</div><div class="rank-name">' + esc(entry.label) + '</div>' :
+          '<div class="msg" style="padding:10px 0">Nessun dato</div>') +
+        '</div>';
+    }
+    html += singleCard('Top trimestre ' + new Date().getFullYear(), d.topQAnno);
+    html += singleCard('Top mese all-time', d.topMeseAllTime);
+    html += singleCard('Top trimestre all-time', d.topQAllTime);
+
+    document.getElementById("rank-content").innerHTML = html;
+  })
+  .catch(function(){
+    document.getElementById("rank-content").innerHTML =
+      '<div class="msg">Non sono riuscito a caricare i dati.<br>' +
+      '<a class="retry" href="javascript:location.reload()">Riprova</a></div>';
+  });
 </script>
 </body>
 </html>
